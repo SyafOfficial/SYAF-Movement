@@ -987,6 +987,7 @@
     .coaching-package-item span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; font-weight: 400; }
     .coaching-form textarea { width: 100%; min-height: 100px; margin-top: 7px; padding: 12px 13px; border: 1px solid #3b3b37; border-radius: 11px; background: #101010; color: var(--text); font: inherit; font-size: 14px; outline: none; resize: vertical; }
     .coaching-form textarea:focus { border-color: var(--gold); }
+    .coaching-feedback-card { margin-top: 16px; } .coaching-feedback-card h2 { margin: 0 0 7px; color: #fff; font-size: 19px; } .coaching-feedback-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; } .feedback-status { margin-top: 12px !important; color: var(--gold-bright) !important; } .star-rating { display:flex; gap:7px; margin:8px 0 3px; } .star-rating button { width:38px; height:38px; padding:0; border:1px solid #50452d; border-radius:10px; background:#12110f; color:#8b7a4d; font-size:22px; line-height:1; } .star-rating button.is-selected,.star-rating button:hover { color:var(--gold-bright); border-color:var(--gold); background:#241e12; } .feedback-form[hidden] { display:none; } .testimonials { margin-top:18px; } .testimonial-list { display:grid; gap:10px; margin-top:10px; } .testimonial { padding:14px; border:1px solid #3e3829; border-radius:13px; background:#12110f; } .testimonial-rating { margin-bottom:6px; color:var(--gold-bright); letter-spacing:.08em; } .testimonial p { margin:0; color:#dedbd2; font-size:13px; line-height:1.5; } .testimonial footer { margin-top:9px; color:var(--muted); font-size:11px; }
 
     .coaching-benefit-panel { margin: 18px 0; padding: 16px; border: 1px solid #3d3a2e; border-radius: 15px; background: #151513; }
     .coaching-benefit-panel h2 { margin: 0 0 6px; color: var(--gold); font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
@@ -2211,6 +2212,19 @@ Thank you.</textarea>
         <button class="primary-button" type="submit">Send coaching request <span class="button-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13"/><path d="m13 7 5 5-5 5"/></svg></span></button>
         <p id="coachingMessage" class="form-message" role="status"></p>
       </form>
+      <section class="registration-card coaching-feedback-card" aria-labelledby="coachingFeedbackTitle">
+        <div class="learning-eyebrow">STUDENT FEEDBACK</div><h2 id="coachingFeedbackTitle">Share your coaching experience.</h2>
+        <p>Feedback is available only after your payment and coaching class have been confirmed by SYAF Movement.</p>
+        <p id="coachingFeedbackStatus" class="feedback-status" role="status">Checking your coaching feedback access…</p>
+        <button id="coachingFeedbackOpenButton" class="secondary-button" type="button" onclick="openCoachingFeedbackForm()" hidden>Leave coaching feedback</button>
+        <form id="coachingFeedbackForm" class="coaching-form feedback-form" onsubmit="submitCoachingFeedback(event)" hidden>
+          <label>Your name<input id="feedbackName" type="text" autocomplete="name" required placeholder="Your name"></label>
+          <label>Coaching package<select id="feedbackPackage" required><option value="" selected disabled>Select your package</option><option value="Basic Package">Basic Package</option><option value="Basic to Advanced Package">Basic to Advanced Package</option></select></label>
+          <label>Your rating</label><input id="feedbackRating" type="hidden" required><div class="star-rating" role="group" aria-label="Choose a rating from one to five stars"><button type="button" data-rating="1" onclick="setFeedbackRating(1)" aria-label="1 star">★</button><button type="button" data-rating="2" onclick="setFeedbackRating(2)" aria-label="2 stars">★</button><button type="button" data-rating="3" onclick="setFeedbackRating(3)" aria-label="3 stars">★</button><button type="button" data-rating="4" onclick="setFeedbackRating(4)" aria-label="4 stars">★</button><button type="button" data-rating="5" onclick="setFeedbackRating(5)" aria-label="5 stars">★</button></div>
+          <label>Your feedback<textarea id="feedbackComment" required maxlength="800" placeholder="Tell future students about your experience."></textarea></label>
+          <p class="registration-note">Your feedback is reviewed by SYAF Movement before it appears publicly.</p><button id="feedbackSubmitButton" class="primary-button" type="submit">Submit feedback</button><p id="feedbackFormMessage" class="form-message" role="status"></p>
+        </form><section id="coachingTestimonials" class="testimonials" hidden><div class="learning-eyebrow">STUDENT TESTIMONIALS</div><div id="testimonialList" class="testimonial-list"></div></section>
+      </section>
       <footer class="footer learning-footer">
         <div class="footer-logo">SM</div>
         <div class="footer-name">SYAF Movement Trading Journey</div>
@@ -2586,6 +2600,7 @@ Thank you.</textarea>
       hideAllScreens();
       document.getElementById("coachingScreen").classList.add("active");
       window.scrollTo({ top: 0, behavior: "smooth" });
+      refreshCoachingFeedback();
     }
 
     function submitCoachingRequest(event) {
@@ -2603,6 +2618,14 @@ Thank you.</textarea>
         "Coaching goal: " + goal;
       window.open("https://wa.me/601133020292?text=" + encodeURIComponent(message), "_blank", "noopener");
     }
+
+
+    let coachingFeedbackAllowed = false;
+    function setFeedbackRating(rating){document.getElementById("feedbackRating").value=String(rating);document.querySelectorAll(".star-rating button").forEach(b=>b.classList.toggle("is-selected",Number(b.dataset.rating)<=rating));}
+    function openCoachingFeedbackForm(){if(!coachingFeedbackAllowed)return;document.getElementById("coachingFeedbackForm").hidden=false;document.getElementById("coachingFeedbackOpenButton").hidden=true;}
+    function renderCoachingTestimonials(items){const section=document.getElementById("coachingTestimonials"),list=document.getElementById("testimonialList");list.innerHTML="";if(!items?.length){section.hidden=true;return;}items.forEach(item=>{const card=document.createElement("article");card.className="testimonial";const stars="★".repeat(Math.max(1,Math.min(5,Number(item.rating)||0)));card.innerHTML='<div class="testimonial-rating">'+stars+'</div><p></p><footer></footer>';card.querySelector("p").textContent=item.comment||"";card.querySelector("footer").textContent=(item.student_name||"SYAF student")+" · "+(item.coaching_package||"Personal Coaching");list.appendChild(card);});section.hidden=false;}
+    async function refreshCoachingFeedback(){const status=document.getElementById("coachingFeedbackStatus"),open=document.getElementById("coachingFeedbackOpenButton");coachingFeedbackAllowed=false;open.hidden=true;if(!tg?.initData){status.textContent="Open this Mini App from Telegram to check your coaching feedback access.";return;}try{const result=await callMemberAccess("coaching_feedback_status");renderCoachingTestimonials(result.testimonials);if(result.feedbackSubmitted){status.textContent="Thank you — your feedback is awaiting review by SYAF Movement.";return;}if(result.feedbackAllowed){coachingFeedbackAllowed=true;status.textContent="Your feedback is unlocked. Thank you for sharing your experience.";open.hidden=false;if(result.coachingPackage)document.getElementById("feedbackPackage").value=result.coachingPackage;return;}status.textContent="Feedback unlocks after your payment and coaching class are confirmed.";}catch(_){status.textContent="Feedback will be available after SYAF Movement confirms your completed coaching session.";}}
+    async function submitCoachingFeedback(event){event.preventDefault();const message=document.getElementById("feedbackFormMessage"),button=document.getElementById("feedbackSubmitButton"),rating=Number(document.getElementById("feedbackRating").value);if(!rating){message.textContent="Please choose a star rating.";message.classList.add("error");return;}button.disabled=true;try{await callMemberAccess("submit_coaching_feedback",{studentName:document.getElementById("feedbackName").value.trim(),coachingPackage:document.getElementById("feedbackPackage").value,rating,comment:document.getElementById("feedbackComment").value.trim()});message.textContent="Thank you. Your feedback is now awaiting SYAF Movement's review.";document.getElementById("coachingFeedbackForm").reset();setFeedbackRating(0);coachingFeedbackAllowed=false;await refreshCoachingFeedback();}catch(error){message.textContent=error.message||"We could not submit your feedback yet.";message.classList.add("error");}finally{button.disabled=false;}}
 
     /* =========================
        MEMBER REGISTRATION
